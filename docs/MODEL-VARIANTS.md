@@ -59,12 +59,12 @@ Gemini 3 models use string-based thinking levels. Available levels differ by mod
 
 > **Note:** The API rejects invalid levels (e.g., `"minimal"` on Pro). Configure variants accordingly.
 
-### Gemini 3 Pro Example
+### Gemini 3.1 Pro Example
 
 ```json
 {
-  "antigravity-gemini-3-pro": {
-    "name": "Gemini 3 Pro (Antigravity)",
+  "antigravity-gemini-3.1-pro": {
+    "name": "Gemini 3.1 Pro (Antigravity)",
     "limit": { "context": 1048576, "output": 65535 },
     "modalities": { "input": ["text", "image", "pdf"], "output": ["text"] },
     "variants": {
@@ -75,16 +75,15 @@ Gemini 3 models use string-based thinking levels. Available levels differ by mod
 }
 ```
 
-### Gemini 3 Flash Example
+### Gemini 3.5 Flash Example
 
 ```json
 {
-  "antigravity-gemini-3-flash": {
-    "name": "Gemini 3 Flash (Antigravity)",
+  "antigravity-gemini-3.5-flash": {
+    "name": "Gemini 3.5 Flash (Antigravity)",
     "limit": { "context": 1048576, "output": 65536 },
     "modalities": { "input": ["text", "image", "pdf"], "output": ["text"] },
     "variants": {
-      "minimal": { "thinkingLevel": "minimal" },
       "low": { "thinkingLevel": "low" },
       "medium": { "thinkingLevel": "medium" },
       "high": { "thinkingLevel": "high" }
@@ -157,14 +156,14 @@ Tier-suffixed model names are still accepted:
 - `antigravity-claude-opus-4-6-thinking-low`
 - `antigravity-claude-opus-4-6-thinking-medium`
 - `antigravity-claude-opus-4-6-thinking-high`
-- `antigravity-gemini-3-pro-low`
-- `antigravity-gemini-3-pro-high`
-- `gemini-3-pro-low`
-- `gemini-3-flash-medium`
+- `antigravity-gemini-3.1-pro-low`
+- `antigravity-gemini-3.1-pro-high`
+- `gemini-3.1-pro-low`
+- `gemini-3.5-flash-medium`
 
 However, **we recommend using simplified model names with variants** for:
 
-- **Cleaner model picker** — 7 models instead of 12+
+- **Cleaner model picker** — 5 Antigravity models with variants instead of 10+ separate tier-suffixed entries
 - **Simpler config** — No need to configure both `antigravity-` and `-preview` versions
 - **Automatic quota routing** — Plugin handles model name transformation
 - **Flexible budgets** — Define any budget, not just preset tiers
@@ -176,7 +175,7 @@ However, **we recommend using simplified model names with variants** for:
 
 | Before (tier-suffixed) | After (variants) |
 |------------------------|------------------|
-| 12+ separate models | 4 models with variants |
+| 10+ separate tier-suffixed models | 5 models with variants |
 | Fixed thinking budgets | Customizable budgets |
 | Cluttered model picker | Clean model picker |
 | Hard to add new tiers | Easy to add new variants |

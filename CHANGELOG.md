@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.6.2] - 2026-06-23
+
+### Fixed
+
+- **Gemini 3.5 Flash 404 ("Requested entity was not found")** - The Antigravity API does not accept the bare `gemini-3.5-flash` model ID (unlike legacy `gemini-3-flash`); it requires a `-low`/`-medium`/`-high` suffix. The resolver now appends the `-low` suffix for Gemini 3.5 Flash under the Antigravity quota, mirroring the existing Gemini 3.1 Pro behavior. The selected variant still drives the `thinkingLevel` request parameter. Legacy `gemini-3-flash` (no `.5`) is unchanged.
+
+## [1.6.1] - 2026-06-22
+
+### Changed
+
+- **Model List Refresh** - Antigravity quota group trimmed to 5 advertised models. Added `antigravity-gemini-3.5-flash`, `antigravity-claude-sonnet-4-6-thinking`, and `antigravity-gpt-oss-120b-medium`; removed `antigravity-gemini-3-pro`, `antigravity-gemini-3-flash`, and the non-thinking `antigravity-claude-sonnet-4-6`. Gemini CLI group unchanged. No resolver/request logic changes — the existing `gemini-3(?:\.\d+)?-flash` regex already covers 3.5, and the `claude-sonnet-4-6` non-thinking hardcode in `request.ts` is an exact-match safety net that does not affect the `-thinking` variant.
+
+### Documentation
+
+- Synced README, MODEL-MAPPING, MODEL-VARIANTS, and ANTIGRAVITY_API_SPEC to the new model set.
+
 ## [1.6.0] - 2026-02-20
 
 ### Fixed

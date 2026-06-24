@@ -63,6 +63,8 @@ const TIER_REGEX = /-(minimal|low|medium|high)$/;
 const QUOTA_PREFIX_REGEX = /^antigravity-/i;
 const GEMINI_3_PRO_REGEX = /^gemini-3(?:\.\d+)?-pro/i;
 const GEMINI_3_FLASH_REGEX = /^gemini-3(?:\.\d+)?-flash/i;
+// Gemini 3.5 Flash：Antigravity 要求带 -level 后缀（与 Pro 一致），见 docs 模型映射表
+const GEMINI_3_5_FLASH_REGEX = /^gemini-3\.5-flash/i;
 
 // ANTIGRAVITY_ONLY_MODELS removed - all models now default to antigravity
 
@@ -185,7 +187,12 @@ export function resolveModelWithTier(requestedModel: string, options: ModelResol
   
   let antigravityModel = modelWithoutQuota;
   if (skipAlias) {
-    if (isGemini3Pro && !tier && !isImageModel) {
+    // Gemini 3.5 Flash：Antigravity 要求带 -level 后缀（与 Pro 一致），
+    // 旧 gemini-3-flash 仍用裸名 + thinkingLevel 参数，逻辑不变
+    const isGemini35Flash = GEMINI_3_5_FLASH_REGEX.test(modelWithoutQuota);
+    if (isGemini35Flash && !isImageModel) {
+      antigravityModel = tier ? modelWithoutQuota : `${baseName}-low`;
+    } else if (isGemini3Pro && !tier && !isImageModel) {
       antigravityModel = `${modelWithoutQuota}-low`;
     } else if (isGemini3Flash && tier) {
       antigravityModel = baseName;

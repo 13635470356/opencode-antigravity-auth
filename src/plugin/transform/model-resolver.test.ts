@@ -111,6 +111,19 @@ describe("resolveModelWithTier", () => {
       expect(result.thinkingLevel).toBe("medium");
     });
 
+    it("antigravity-gemini-3.5-flash gets -low suffix (Antigravity requires suffix)", () => {
+      const result = resolveModelWithTier("antigravity-gemini-3.5-flash");
+      expect(result.actualModel).toBe("gemini-3.5-flash-low");
+      expect(result.thinkingLevel).toBe("low");
+      expect(result.quotaPreference).toBe("antigravity");
+    });
+
+    it("antigravity-gemini-3.5-flash-high keeps tier suffix", () => {
+      const result = resolveModelWithTier("antigravity-gemini-3.5-flash-high");
+      expect(result.actualModel).toBe("gemini-3.5-flash-high");
+      expect(result.thinkingLevel).toBe("high");
+    });
+
     it("antigravity-gemini-3.1-pro gets default -low model", () => {
       const result = resolveModelWithTier("antigravity-gemini-3.1-pro");
       expect(result.actualModel).toBe("gemini-3.1-pro-low");

@@ -31,6 +31,10 @@ antigravity-debug-*.log
 # IntelliJ based IDEs
 .idea
 
+# omc
+.omc
+.claude 
+
 # Finder (MacOS) folder config
 .DS_Store
 

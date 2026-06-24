@@ -16,10 +16,10 @@ describe("OPENCODE_MODEL_DEFINITIONS", () => {
 
     expect(modelNames).toEqual([
       "antigravity-claude-opus-4-6-thinking",
-      "antigravity-claude-sonnet-4-6",
-      "antigravity-gemini-3-flash",
-      "antigravity-gemini-3-pro",
+      "antigravity-claude-sonnet-4-6-thinking",
       "antigravity-gemini-3.1-pro",
+      "antigravity-gemini-3.5-flash",
+      "antigravity-gpt-oss-120b-medium",
       "gemini-2.5-flash",
       "gemini-2.5-pro",
       "gemini-3-flash-preview",
@@ -30,18 +30,12 @@ describe("OPENCODE_MODEL_DEFINITIONS", () => {
   });
 
   it("defines Gemini 3 variants for Antigravity models", () => {
-    expect(getModel("antigravity-gemini-3-pro").variants).toEqual({
-      low: { thinkingLevel: "low" },
-      high: { thinkingLevel: "high" },
-    });
-
     expect(getModel("antigravity-gemini-3.1-pro").variants).toEqual({
       low: { thinkingLevel: "low" },
       high: { thinkingLevel: "high" },
     });
 
-    expect(getModel("antigravity-gemini-3-flash").variants).toEqual({
-      minimal: { thinkingLevel: "minimal" },
+    expect(getModel("antigravity-gemini-3.5-flash").variants).toEqual({
       low: { thinkingLevel: "low" },
       medium: { thinkingLevel: "medium" },
       high: { thinkingLevel: "high" },
@@ -53,5 +47,17 @@ describe("OPENCODE_MODEL_DEFINITIONS", () => {
       low: { thinkingConfig: { thinkingBudget: 8192 } },
       max: { thinkingConfig: { thinkingBudget: 32768 } },
     });
+
+    expect(getModel("antigravity-claude-sonnet-4-6-thinking").variants).toEqual({
+      low: { thinkingConfig: { thinkingBudget: 8192 } },
+      max: { thinkingConfig: { thinkingBudget: 32768 } },
+    });
+  });
+
+  it("defines GPT-OSS without variants and default (待核) limits", () => {
+    const gptOss = getModel("antigravity-gpt-oss-120b-medium");
+    expect(gptOss.variants).toBeUndefined();
+    expect(gptOss.limit).toEqual({ context: 131072, output: 32768 });
+    expect(gptOss.name).toBe("GPT-OSS 120B Medium (Antigravity)");
   });
 });

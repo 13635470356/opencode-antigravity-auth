@@ -112,11 +112,11 @@ opencode run "Hello" --model=google/antigravity-claude-opus-4-6-thinking --varia
 
 | Model | Variants | Notes |
 |-------|----------|-------|
-| `antigravity-gemini-3-pro` | low, high | Gemini 3 Pro with thinking |
+| `antigravity-gemini-3.5-flash` | low, medium, high | Gemini 3.5 Flash with thinking |
 | `antigravity-gemini-3.1-pro` | low, high | Gemini 3.1 Pro with thinking (rollout-dependent) |
-| `antigravity-gemini-3-flash` | minimal, low, medium, high | Gemini 3 Flash with thinking |
-| `antigravity-claude-sonnet-4-6` | — | Claude Sonnet 4.6 |
+| `antigravity-claude-sonnet-4-6-thinking` | low, max | Claude Sonnet 4.6 with extended thinking |
 | `antigravity-claude-opus-4-6-thinking` | low, max | Claude Opus 4.6 with extended thinking |
+| `antigravity-gpt-oss-120b-medium` | — | GPT-OSS 120B Medium |
 
 **Gemini CLI quota** (separate from Antigravity; used when `cli_first` is true or as fallback):
 
@@ -134,7 +134,7 @@ opencode run "Hello" --model=google/antigravity-claude-opus-4-6-thinking --varia
 > - **CLI-first (`cli_first: true`):** Gemini models use Gemini CLI quota first.
 > - When a Gemini quota pool is exhausted, the plugin automatically falls back to the other pool.
 > - Claude and image models always use Antigravity.
-> Model names are automatically transformed for the target API (e.g., `antigravity-gemini-3-flash` → `gemini-3-flash-preview` for CLI).
+> Model names are automatically transformed for the target API (e.g., `antigravity-gemini-3.1-pro` → `gemini-3.1-pro-preview` for CLI).
 
 **Using variants:**
 ```bash
@@ -155,12 +155,13 @@ Add this to your `~/.config/opencode/opencode.json`:
   "provider": {
     "google": {
       "models": {
-        "antigravity-gemini-3-pro": {
-          "name": "Gemini 3 Pro (Antigravity)",
-          "limit": { "context": 1048576, "output": 65535 },
+        "antigravity-gemini-3.5-flash": {
+          "name": "Gemini 3.5 Flash (Antigravity)",
+          "limit": { "context": 1048576, "output": 65536 },
           "modalities": { "input": ["text", "image", "pdf"], "output": ["text"] },
           "variants": {
             "low": { "thinkingLevel": "low" },
+            "medium": { "thinkingLevel": "medium" },
             "high": { "thinkingLevel": "high" }
           }
         },
@@ -173,21 +174,14 @@ Add this to your `~/.config/opencode/opencode.json`:
             "high": { "thinkingLevel": "high" }
           }
         },
-        "antigravity-gemini-3-flash": {
-          "name": "Gemini 3 Flash (Antigravity)",
-          "limit": { "context": 1048576, "output": 65536 },
+        "antigravity-claude-sonnet-4-6-thinking": {
+          "name": "Claude Sonnet 4.6 Thinking (Antigravity)",
+          "limit": { "context": 200000, "output": 64000 },
           "modalities": { "input": ["text", "image", "pdf"], "output": ["text"] },
           "variants": {
-            "minimal": { "thinkingLevel": "minimal" },
-            "low": { "thinkingLevel": "low" },
-            "medium": { "thinkingLevel": "medium" },
-            "high": { "thinkingLevel": "high" }
+            "low": { "thinkingConfig": { "thinkingBudget": 8192 } },
+            "max": { "thinkingConfig": { "thinkingBudget": 32768 } }
           }
-        },
-        "antigravity-claude-sonnet-4-6": {
-          "name": "Claude Sonnet 4.6 (Antigravity)",
-          "limit": { "context": 200000, "output": 64000 },
-          "modalities": { "input": ["text", "image", "pdf"], "output": ["text"] }
         },
         "antigravity-claude-opus-4-6-thinking": {
           "name": "Claude Opus 4.6 Thinking (Antigravity)",
@@ -197,6 +191,11 @@ Add this to your `~/.config/opencode/opencode.json`:
             "low": { "thinkingConfig": { "thinkingBudget": 8192 } },
             "max": { "thinkingConfig": { "thinkingBudget": 32768 } }
           }
+        },
+        "antigravity-gpt-oss-120b-medium": {
+          "name": "GPT-OSS 120B Medium (Antigravity)",
+          "limit": { "context": 131072, "output": 32768 },
+          "modalities": { "input": ["text", "image", "pdf"], "output": ["text"] }
         },
         "gemini-2.5-flash": {
           "name": "Gemini 2.5 Flash (Gemini CLI)",
@@ -234,7 +233,7 @@ Add this to your `~/.config/opencode/opencode.json`:
 }
 ```
 
-> **Backward Compatibility:** Legacy model names with `antigravity-` prefix (e.g., `antigravity-gemini-3-flash`) still work. The plugin automatically handles model name transformation for both Antigravity and Gemini CLI APIs.
+> **Backward Compatibility:** Legacy model names with `antigravity-` prefix (e.g., `antigravity-gemini-3.5-flash`) still work. The plugin automatically handles model name transformation for both Antigravity and Gemini CLI APIs.
 
 </details>
 
@@ -422,8 +421,8 @@ If you encounter errors during a session:
 {
   "google_auth": false,
   "agents": {
-    "frontend-ui-ux-engineer": { "model": "google/antigravity-gemini-3-pro" },
-    "document-writer": { "model": "google/antigravity-gemini-3-flash" }
+    "frontend-ui-ux-engineer": { "model": "google/antigravity-gemini-3.1-pro" },
+    "document-writer": { "model": "google/antigravity-gemini-3.5-flash" }
   }
 }
 ```
@@ -560,9 +559,9 @@ Disable built-in auth and override agent models in `oh-my-opencode.json`:
 {
   "google_auth": false,
   "agents": {
-    "frontend-ui-ux-engineer": { "model": "google/antigravity-gemini-3-pro" },
-    "document-writer": { "model": "google/antigravity-gemini-3-flash" },
-    "multimodal-looker": { "model": "google/antigravity-gemini-3-flash" }
+    "frontend-ui-ux-engineer": { "model": "google/antigravity-gemini-3.1-pro" },
+    "document-writer": { "model": "google/antigravity-gemini-3.5-flash" },
+    "multimodal-looker": { "model": "google/antigravity-gemini-3.5-flash" }
   }
 }
 ```
