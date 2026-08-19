@@ -55,7 +55,7 @@ Install the opencode-antigravity-auth plugin and add the Antigravity model defin
 
    ```json
    {
-     "plugin": ["opencode-antigravity-auth@latest"]
+     "plugin": ["opencode-antigravity-auth-zz@latest"]
    }
    ```
 
@@ -538,7 +538,7 @@ Most users don't need to configure anything — defaults work well.
 ### Model Behavior
 
 | Option | Default | What it does |
-|--------|---------|--------------
+|--------|---------|--------------|
 | `keep_thinking` | `false` | Preserve Claude's thinking across turns. **Warning:** enabling may degrade model stability. |
 | `session_recovery` | `true` | Auto-recover from tool errors |
 | `cli_first` | `false` | Route Gemini models to Gemini CLI first (Claude and image models stay on Antigravity). |
