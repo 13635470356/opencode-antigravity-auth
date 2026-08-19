@@ -1,115 +1,48 @@
-import type { ProviderModel } from "../types";
-
-export type ModelThinkingLevel = "minimal" | "low" | "medium" | "high";
-
-export interface ModelThinkingConfig {
-  thinkingBudget: number;
-}
-
-export interface ModelVariant {
-  thinkingLevel?: ModelThinkingLevel;
-  thinkingConfig?: ModelThinkingConfig;
-}
+import { loadModelMapping } from "./model-mapping"
+import type { ProviderModel } from "../types"
 
 export interface ModelLimit {
-  context: number;
-  output: number;
+  context: number
+  output: number
 }
 
-export type ModelModality = "text" | "image" | "pdf";
-
 export interface ModelModalities {
-  input: ModelModality[];
-  output: ModelModality[];
+  input: string[]
+  output: string[]
 }
 
 export interface OpencodeModelDefinition extends ProviderModel {
-  name: string;
-  limit: ModelLimit;
-  modalities: ModelModalities;
-  variants?: Record<string, ModelVariant>;
+  name: string
+  limit: ModelLimit
+  modalities: ModelModalities
 }
 
-export type OpencodeModelDefinitions = Record<string, OpencodeModelDefinition>;
+export type OpencodeModelDefinitions = Record<string, OpencodeModelDefinition>
 
 const DEFAULT_MODALITIES: ModelModalities = {
   input: ["text", "image", "pdf"],
   output: ["text"],
-};
+}
 
-export const OPENCODE_MODEL_DEFINITIONS: OpencodeModelDefinitions = {
-  "antigravity-gemini-3.5-flash": {
-    name: "Gemini 3.5 Flash (Antigravity)",
-    limit: { context: 1048576, output: 65536 },
-    modalities: DEFAULT_MODALITIES,
-    variants: {
-      low: { thinkingLevel: "low" },
-      medium: { thinkingLevel: "medium" },
-      high: { thinkingLevel: "high" },
+// 由配置名生成展示名：antigravity-gemini-3.7-flash-high → Antigravity Gemini 3.7 Flash High
+function deriveDisplayName(configName: string): string {
+  return configName
+    .split("-")
+    .map((word) => (word ? word.charAt(0).toUpperCase() + word.slice(1) : word))
+    .join(" ")
+}
+
+/**
+ * OpenCode 模型定义列表 —— 全部由 assets/model-mapping.json 派生。
+ * 新增模型只需编辑映射 JSON，此文件零模型知识。
+ */
+export const OPENCODE_MODEL_DEFINITIONS: OpencodeModelDefinitions = Object.fromEntries(
+  Object.entries(loadModelMapping()).map(([configName, entry]) => [
+    configName,
+    {
+      name: deriveDisplayName(configName),
+      limit: entry.limit,
+      modalities: entry.modalities ?? DEFAULT_MODALITIES,
     },
-  },
-  "antigravity-gemini-3.1-pro": {
-    name: "Gemini 3.1 Pro (Antigravity)",
-    limit: { context: 1048576, output: 65535 },
-    modalities: DEFAULT_MODALITIES,
-    variants: {
-      low: { thinkingLevel: "low" },
-      high: { thinkingLevel: "high" },
-    },
-  },
-  "antigravity-claude-sonnet-4-6-thinking": {
-    name: "Claude Sonnet 4.6 Thinking (Antigravity)",
-    limit: { context: 200000, output: 64000 },
-    modalities: DEFAULT_MODALITIES,
-    variants: {
-      low: { thinkingConfig: { thinkingBudget: 8192 } },
-      max: { thinkingConfig: { thinkingBudget: 32768 } },
-    },
-  },
-  "antigravity-claude-opus-4-6-thinking": {
-    name: "Claude Opus 4.6 Thinking (Antigravity)",
-    limit: { context: 200000, output: 64000 },
-    modalities: DEFAULT_MODALITIES,
-    variants: {
-      low: { thinkingConfig: { thinkingBudget: 8192 } },
-      max: { thinkingConfig: { thinkingBudget: 32768 } },
-    },
-  },
-  // 限额待核：Antigravity 已验证模型 ID gpt-oss-120b-medium（见 docs/ANTIGRAVITY_API_SPEC.md），
-  // 但 context/output 限额无官方证据，以下默认值待对着线上 API 核实后调整。
-  "antigravity-gpt-oss-120b-medium": {
-    name: "GPT-OSS 120B Medium (Antigravity)",
-    limit: { context: 131072, output: 32768 },
-    modalities: DEFAULT_MODALITIES,
-  },
-  "gemini-2.5-flash": {
-    name: "Gemini 2.5 Flash (Gemini CLI)",
-    limit: { context: 1048576, output: 65536 },
-    modalities: DEFAULT_MODALITIES,
-  },
-  "gemini-2.5-pro": {
-    name: "Gemini 2.5 Pro (Gemini CLI)",
-    limit: { context: 1048576, output: 65536 },
-    modalities: DEFAULT_MODALITIES,
-  },
-  "gemini-3-flash-preview": {
-    name: "Gemini 3 Flash Preview (Gemini CLI)",
-    limit: { context: 1048576, output: 65536 },
-    modalities: DEFAULT_MODALITIES,
-  },
-  "gemini-3-pro-preview": {
-    name: "Gemini 3 Pro Preview (Gemini CLI)",
-    limit: { context: 1048576, output: 65535 },
-    modalities: DEFAULT_MODALITIES,
-  },
-  "gemini-3.1-pro-preview": {
-    name: "Gemini 3.1 Pro Preview (Gemini CLI)",
-    limit: { context: 1048576, output: 65535 },
-    modalities: DEFAULT_MODALITIES,
-  },
-  "gemini-3.1-pro-preview-customtools": {
-    name: "Gemini 3.1 Pro Preview Custom Tools (Gemini CLI)",
-    limit: { context: 1048576, output: 65535 },
-    modalities: DEFAULT_MODALITIES,
-  },
-};
+  ]),
+)

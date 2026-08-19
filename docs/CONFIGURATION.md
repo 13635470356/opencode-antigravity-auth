@@ -38,6 +38,7 @@ Settings that affect how the model thinks and responds.
 | `session_recovery` | `true` | Auto-recover from tool_result_missing errors |
 | `auto_resume` | `false` | Auto-send resume prompt after recovery |
 | `resume_text` | `"continue"` | Text to send when auto-resuming |
+| `cli_first` | `false` | Route Gemini models to Gemini CLI quota first (Claude and image models stay on Antigravity). **Note:** Currently all mapped models use the `antigravity` pool, so this option has no effect until `gemini-cli` pool models are added. |
 
 > **Note:** The `web_search` config options are deprecated. Google Search is now implemented as a dedicated `google_search` tool that the model can call explicitly.
 

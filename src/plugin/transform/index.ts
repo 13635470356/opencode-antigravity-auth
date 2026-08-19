@@ -17,17 +17,11 @@ export type {
   GoogleSearchConfig,
 } from "./types";
 
-// Model resolution
+// Model resolution（2.0.0 起纯查表：assets/model-mapping.json）
 export {
-  resolveModelWithTier,
-  resolveModelWithVariant,
-  resolveModelForHeaderStyle,
+  resolveModel,
   getModelFamily,
-  MODEL_ALIASES,
-  THINKING_TIER_BUDGETS,
-  GEMINI_3_THINKING_LEVELS,
 } from "./model-resolver";
-export type { VariantConfig } from "./model-resolver";
 
 // Claude transforms
 export {

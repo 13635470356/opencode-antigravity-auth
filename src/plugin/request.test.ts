@@ -557,7 +557,7 @@ describe("request.ts", () => {
 
     it("detects streaming from generateStreamContent action", () => {
       const result = prepareAntigravityRequest(
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:streamGenerateContent",
+        "https://generativelanguage.googleapis.com/v1beta/models/antigravity-gemini-3.7-flash-high:streamGenerateContent",
         { method: "POST", body: JSON.stringify({ contents: [] }) },
         mockAccessToken,
         mockProjectId
@@ -567,7 +567,7 @@ describe("request.ts", () => {
 
     it("detects non-streaming from generateContent action", () => {
       const result = prepareAntigravityRequest(
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent",
+        "https://generativelanguage.googleapis.com/v1beta/models/antigravity-gemini-3.7-flash-high:generateContent",
         { method: "POST", body: JSON.stringify({ contents: [] }) },
         mockAccessToken,
         mockProjectId
@@ -577,7 +577,7 @@ describe("request.ts", () => {
 
     it("sets Authorization header with Bearer token", () => {
       const result = prepareAntigravityRequest(
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent",
+        "https://generativelanguage.googleapis.com/v1beta/models/antigravity-gemini-3.7-flash-high:generateContent",
         { method: "POST", body: JSON.stringify({ contents: [] }) },
         mockAccessToken,
         mockProjectId
@@ -588,7 +588,7 @@ describe("request.ts", () => {
 
 it("removes x-api-key header", () => {
       const result = prepareAntigravityRequest(
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent",
+        "https://generativelanguage.googleapis.com/v1beta/models/antigravity-gemini-3.7-flash-high:generateContent",
         { method: "POST", body: JSON.stringify({ contents: [] }), headers: { "x-api-key": "old-key" } },
         mockAccessToken,
         mockProjectId
@@ -599,7 +599,7 @@ it("removes x-api-key header", () => {
 
     it("removes x-goog-user-project header for antigravity headerStyle", () => {
       const result = prepareAntigravityRequest(
-        "https://generativelanguage.googleapis.com/v1beta/models/claude-opus-4-6-thinking:generateContent",
+        "https://generativelanguage.googleapis.com/v1beta/models/antigravity-claude-opus-4-6-thinking:generateContent",
         { method: "POST", body: JSON.stringify({ contents: [] }), headers: { "x-goog-user-project": "my-project" } },
         mockAccessToken,
         mockProjectId,
@@ -612,7 +612,7 @@ it("removes x-api-key header", () => {
 
     it("removes x-goog-user-project header for gemini-cli headerStyle", () => {
       const result = prepareAntigravityRequest(
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+        "https://generativelanguage.googleapis.com/v1beta/models/antigravity-gemini-3.6-flash-high:generateContent",
         { method: "POST", body: JSON.stringify({ contents: [] }), headers: { "x-goog-user-project": "my-project" } },
         mockAccessToken,
         mockProjectId,
@@ -625,7 +625,7 @@ it("removes x-api-key header", () => {
 
     it("uses exact Code Assist headers for gemini-cli headerStyle", () => {
       const result = prepareAntigravityRequest(
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash:generateContent",
+        "https://generativelanguage.googleapis.com/v1beta/models/antigravity-gemini-3.6-flash-high:generateContent",
         { method: "POST", body: JSON.stringify({ contents: [] }) },
         mockAccessToken,
         mockProjectId,
@@ -640,7 +640,7 @@ it("removes x-api-key header", () => {
 
     it("builds gemini-cli wrapped body without antigravity-only fields", () => {
       const result = prepareAntigravityRequest(
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash:generateContent",
+        "https://generativelanguage.googleapis.com/v1beta/models/antigravity-gemini-3.6-flash-high:generateContent",
         { method: "POST", body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: "hi" }] }] }) },
         mockAccessToken,
         "",
@@ -658,28 +658,28 @@ it("removes x-api-key header", () => {
 
     it("identifies Claude models correctly", () => {
       const result = prepareAntigravityRequest(
-        "https://generativelanguage.googleapis.com/v1beta/models/claude-sonnet-4-20250514:generateContent",
+        "https://generativelanguage.googleapis.com/v1beta/models/antigravity-claude-sonnet-4-6:generateContent",
         { method: "POST", body: JSON.stringify({ contents: [] }) },
         mockAccessToken,
         mockProjectId
       );
-      expect(result.effectiveModel).toContain("claude");
+      expect(result.effectiveModel).toBe("claude-sonnet-4-6");
     });
 
     it("identifies Gemini models correctly", () => {
       const result = prepareAntigravityRequest(
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent",
+        "https://generativelanguage.googleapis.com/v1beta/models/antigravity-gemini-3.7-flash-high:generateContent",
         { method: "POST", body: JSON.stringify({ contents: [] }) },
         mockAccessToken,
         mockProjectId
       );
-      expect(result.effectiveModel).toContain("gemini");
+      expect(result.effectiveModel).toBe("gemini-3.7-flash-high");
     });
 
     it("uses custom endpoint override", () => {
       const customEndpoint = "https://custom.api.com";
       const result = prepareAntigravityRequest(
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent",
+        "https://generativelanguage.googleapis.com/v1beta/models/antigravity-gemini-3.7-flash-high:generateContent",
         { method: "POST", body: JSON.stringify({ contents: [] }) },
         mockAccessToken,
         mockProjectId,
@@ -694,7 +694,7 @@ it("removes x-api-key header", () => {
         request: { contents: [{ parts: [{ text: "Hello" }] }] }
       };
       const result = prepareAntigravityRequest(
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent",
+        "https://generativelanguage.googleapis.com/v1beta/models/antigravity-gemini-3.7-flash-high:generateContent",
         { method: "POST", body: JSON.stringify(wrappedBody) },
         mockAccessToken,
         mockProjectId
@@ -707,7 +707,7 @@ it("removes x-api-key header", () => {
         contents: [{ parts: [{ text: "Hello" }] }]
       };
       const result = prepareAntigravityRequest(
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent",
+        "https://generativelanguage.googleapis.com/v1beta/models/antigravity-gemini-3.7-flash-high:generateContent",
         { method: "POST", body: JSON.stringify(unwrappedBody) },
         mockAccessToken,
         mockProjectId
@@ -721,7 +721,7 @@ it("removes x-api-key header", () => {
         request: { messages: [{ role: "user", content: [{ type: "text", text: "Hello" }] }] }
       };
       const result = prepareAntigravityRequest(
-        "https://generativelanguage.googleapis.com/v1beta/models/claude-3-7-sonnet:generateContent",
+        "https://generativelanguage.googleapis.com/v1beta/models/antigravity-claude-opus-4-6-thinking:generateContent",
         { method: "POST", body: JSON.stringify(wrappedBody) },
         mockAccessToken,
         mockProjectId,
@@ -736,7 +736,7 @@ it("removes x-api-key header", () => {
         messages: [{ role: "user", content: [{ type: "text", text: "Hello" }] }]
       };
       const result = prepareAntigravityRequest(
-        "https://generativelanguage.googleapis.com/v1beta/models/claude-3-7-sonnet:generateContent",
+        "https://generativelanguage.googleapis.com/v1beta/models/antigravity-claude-opus-4-6-thinking:generateContent",
         { method: "POST", body: JSON.stringify(unwrappedBody) },
         mockAccessToken,
         mockProjectId,
@@ -751,7 +751,7 @@ it("removes x-api-key header", () => {
         messages: [{ role: "user", content: [{ type: "text", text: "Hello" }] }]
       };
       const result = prepareAntigravityRequest(
-        "https://generativelanguage.googleapis.com/v1beta/models/claude-3-7-sonnet:generateContent",
+        "https://generativelanguage.googleapis.com/v1beta/models/antigravity-claude-opus-4-6-thinking:generateContent",
         { method: "POST", body: JSON.stringify(unwrappedBody) },
         mockAccessToken,
         mockProjectId,
@@ -767,7 +767,7 @@ it("removes x-api-key header", () => {
 
     it("strips Claude thinking blocks when keep_thinking is false (unwrapped)", () => {
       const result = withKeepThinking(false, () => prepareAntigravityRequest(
-        "https://generativelanguage.googleapis.com/v1beta/models/claude-opus-4-6-thinking:generateContent",
+        "https://generativelanguage.googleapis.com/v1beta/models/antigravity-claude-opus-4-6-thinking:generateContent",
         {
           method: "POST",
           body: JSON.stringify({
@@ -805,7 +805,7 @@ it("removes x-api-key header", () => {
 
     it("strips Claude thinking blocks when keep_thinking is false (wrapped)", () => {
       const result = withKeepThinking(false, () => prepareAntigravityRequest(
-        "https://generativelanguage.googleapis.com/v1beta/models/claude-opus-4-6-thinking:generateContent",
+        "https://generativelanguage.googleapis.com/v1beta/models/antigravity-claude-opus-4-6-thinking:generateContent",
         {
           method: "POST",
           body: JSON.stringify({
@@ -847,7 +847,7 @@ it("removes x-api-key header", () => {
     it("does not trust foreign Gemini thoughtSignature when keep_thinking is true", () => {
       const foreignSignature = "x".repeat(MIN_SIGNATURE_LENGTH + 8);
       const result = withKeepThinking(true, () => prepareAntigravityRequest(
-        "https://generativelanguage.googleapis.com/v1beta/models/claude-opus-4-6-thinking:generateContent",
+        "https://generativelanguage.googleapis.com/v1beta/models/antigravity-claude-opus-4-6-thinking:generateContent",
         {
           method: "POST",
           body: JSON.stringify({
@@ -888,7 +888,7 @@ it("removes x-api-key header", () => {
     it("replaces foreign Claude signatures with sentinel when keep_thinking is true", () => {
       const foreignSignature = "y".repeat(MIN_SIGNATURE_LENGTH + 8);
       const result = withKeepThinking(true, () => prepareAntigravityRequest(
-        "https://generativelanguage.googleapis.com/v1beta/models/claude-opus-4-6-thinking:generateContent",
+        "https://generativelanguage.googleapis.com/v1beta/models/antigravity-claude-opus-4-6-thinking:generateContent",
         {
           method: "POST",
           body: JSON.stringify({
@@ -928,17 +928,17 @@ it("removes x-api-key header", () => {
 
     it("returns requestedModel matching URL model", () => {
       const result = prepareAntigravityRequest(
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+        "https://generativelanguage.googleapis.com/v1beta/models/antigravity-gemini-3.6-flash-high:generateContent",
         { method: "POST", body: JSON.stringify({ contents: [] }) },
         mockAccessToken,
         mockProjectId
       );
-      expect(result.requestedModel).toBe("gemini-2.5-flash");
+      expect(result.requestedModel).toBe("antigravity-gemini-3.6-flash-high");
     });
 
     it("handles empty body gracefully", () => {
       const result = prepareAntigravityRequest(
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent",
+        "https://generativelanguage.googleapis.com/v1beta/models/antigravity-gemini-3.7-flash-high:generateContent",
         { method: "POST", body: JSON.stringify({}) },
         mockAccessToken,
         mockProjectId
@@ -948,7 +948,7 @@ it("removes x-api-key header", () => {
 
     it("handles minimal valid JSON body", () => {
       const result = prepareAntigravityRequest(
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent",
+        "https://generativelanguage.googleapis.com/v1beta/models/antigravity-gemini-3.7-flash-high:generateContent",
         { method: "POST", body: JSON.stringify({ contents: [] }) },
         mockAccessToken,
         mockProjectId
@@ -958,7 +958,7 @@ it("removes x-api-key header", () => {
 
     it("removes contents entries with empty or invalid parts", () => {
       const result = prepareAntigravityRequest(
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+        "https://generativelanguage.googleapis.com/v1beta/models/antigravity-gemini-3.6-flash-high:generateContent",
         {
           method: "POST",
           body: JSON.stringify({
@@ -990,7 +990,7 @@ it("removes x-api-key header", () => {
 
     it("drops systemInstruction when all parts are invalid", () => {
       const result = prepareAntigravityRequest(
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+        "https://generativelanguage.googleapis.com/v1beta/models/antigravity-gemini-3.6-flash-high:generateContent",
         {
           method: "POST",
           body: JSON.stringify({
@@ -1013,7 +1013,7 @@ it("removes x-api-key header", () => {
 
     it("preserves headerStyle in response", () => {
       const result = prepareAntigravityRequest(
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent",
+        "https://generativelanguage.googleapis.com/v1beta/models/antigravity-gemini-3.7-flash-high:generateContent",
         { method: "POST", body: JSON.stringify({ contents: [] }) },
         mockAccessToken,
         mockProjectId,
@@ -1024,103 +1024,7 @@ it("removes x-api-key header", () => {
     });
 
     describe("Issue #103: model name transformation during quota fallback", () => {
-      it("transforms gemini-3-flash-preview to gemini-3-flash for antigravity headerStyle", () => {
-        const result = prepareAntigravityRequest(
-          "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent",
-          { method: "POST", body: JSON.stringify({ contents: [] }) },
-          mockAccessToken,
-          mockProjectId,
-          undefined,
-          "antigravity"
-        );
-        expect(result.effectiveModel).toBe("gemini-3-flash");
-      });
-
-      it("transforms gemini-3-pro-preview to gemini-3-pro-low for antigravity headerStyle", () => {
-        const result = prepareAntigravityRequest(
-          "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-preview:generateContent",
-          { method: "POST", body: JSON.stringify({ contents: [] }) },
-          mockAccessToken,
-          mockProjectId,
-          undefined,
-          "antigravity"
-        );
-        expect(result.effectiveModel).toBe("gemini-3-pro-low");
-      });
-
-      it("transforms gemini-3.1-pro-preview to gemini-3.1-pro-low for antigravity headerStyle", () => {
-        const result = prepareAntigravityRequest(
-          "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent",
-          { method: "POST", body: JSON.stringify({ contents: [] }) },
-          mockAccessToken,
-          mockProjectId,
-          undefined,
-          "antigravity"
-        );
-        expect(result.effectiveModel).toBe("gemini-3.1-pro-low");
-      });
-
-      it("transforms gemini-3.1-pro-preview-customtools to gemini-3.1-pro-low for antigravity headerStyle", () => {
-        const result = prepareAntigravityRequest(
-          "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview-customtools:generateContent",
-          { method: "POST", body: JSON.stringify({ contents: [] }) },
-          mockAccessToken,
-          mockProjectId,
-          undefined,
-          "antigravity"
-        );
-        expect(result.effectiveModel).toBe("gemini-3.1-pro-low");
-      });
-
-      it("transforms gemini-3-flash to gemini-3-flash-preview for gemini-cli headerStyle", () => {
-        const result = prepareAntigravityRequest(
-          "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash:generateContent",
-          { method: "POST", body: JSON.stringify({ contents: [] }) },
-          mockAccessToken,
-          mockProjectId,
-          undefined,
-          "gemini-cli"
-        );
-        expect(result.effectiveModel).toBe("gemini-3-flash-preview");
-      });
-
-      it("transforms gemini-3-pro-low to gemini-3-pro-preview for gemini-cli headerStyle", () => {
-        const result = prepareAntigravityRequest(
-          "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-low:generateContent",
-          { method: "POST", body: JSON.stringify({ contents: [] }) },
-          mockAccessToken,
-          mockProjectId,
-          undefined,
-          "gemini-cli"
-        );
-        expect(result.effectiveModel).toBe("gemini-3-pro-preview");
-      });
-
-      it("transforms gemini-3.1-pro-low to gemini-3.1-pro-preview for gemini-cli headerStyle", () => {
-        const result = prepareAntigravityRequest(
-          "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-low:generateContent",
-          { method: "POST", body: JSON.stringify({ contents: [] }) },
-          mockAccessToken,
-          mockProjectId,
-          undefined,
-          "gemini-cli"
-        );
-        expect(result.effectiveModel).toBe("gemini-3.1-pro-preview");
-      });
-
-      it("keeps gemini-3.1-pro-preview-customtools unchanged for gemini-cli headerStyle", () => {
-        const result = prepareAntigravityRequest(
-          "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview-customtools:generateContent",
-          { method: "POST", body: JSON.stringify({ contents: [] }) },
-          mockAccessToken,
-          mockProjectId,
-          undefined,
-          "gemini-cli"
-        );
-        expect(result.effectiveModel).toBe("gemini-3.1-pro-preview-customtools");
-      });
-
-      it("keeps non-Gemini-3 models unchanged regardless of headerStyle", () => {
+      it("passes through unmapped models unchanged", () => {
         const result = prepareAntigravityRequest(
           "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
           { method: "POST", body: JSON.stringify({ contents: [] }) },
@@ -1129,7 +1033,62 @@ it("removes x-api-key header", () => {
           undefined,
           "antigravity"
         );
-        expect(result.effectiveModel).toBe("gemini-2.5-flash");
+        // Unmapped models get passthrough treatment: no transformation, no effectiveModel
+        expect(result.streaming).toBe(false);
+        expect(result.headerStyle).toBe("antigravity");
+        expect(result.effectiveModel).toBeUndefined();
+      });
+
+      it("maps antigravity-gemini-3.7-flash-high to actual gemini-3.7-flash-high", () => {
+        const result = prepareAntigravityRequest(
+          "https://generativelanguage.googleapis.com/v1beta/models/antigravity-gemini-3.7-flash-high:generateContent",
+          { method: "POST", body: JSON.stringify({ contents: [] }) },
+          mockAccessToken,
+          mockProjectId,
+          undefined,
+          "antigravity"
+        );
+        expect(result.effectiveModel).toBe("gemini-3.7-flash-high");
+        expect(result.request).toContain("/v1internal:generateContent");
+      });
+
+      it("maps antigravity-claude-opus-4-6-thinking to actual claude-opus-4-6-thinking", () => {
+        const result = prepareAntigravityRequest(
+          "https://generativelanguage.googleapis.com/v1beta/models/antigravity-claude-opus-4-6-thinking:generateContent",
+          { method: "POST", body: JSON.stringify({ contents: [] }) },
+          mockAccessToken,
+          mockProjectId,
+          undefined,
+          "antigravity"
+        );
+        expect(result.effectiveModel).toBe("claude-opus-4-6-thinking");
+        expect(result.request).toContain("/v1internal:generateContent");
+      });
+
+      it("maps antigravity-gemini-3.6-flash-high with gemini-cli headerStyle", () => {
+        const result = prepareAntigravityRequest(
+          "https://generativelanguage.googleapis.com/v1beta/models/antigravity-gemini-3.6-flash-high:generateContent",
+          { method: "POST", body: JSON.stringify({ contents: [] }) },
+          mockAccessToken,
+          mockProjectId,
+          undefined,
+          "gemini-cli"
+        );
+        expect(result.effectiveModel).toBe("gemini-3.6-flash-high");
+        expect(result.request).toContain("/v1internal:generateContent");
+      });
+
+      it("maps antigravity-claude-sonnet-4-6 to actual claude-sonnet-4-6", () => {
+        const result = prepareAntigravityRequest(
+          "https://generativelanguage.googleapis.com/v1beta/models/antigravity-claude-sonnet-4-6:generateContent",
+          { method: "POST", body: JSON.stringify({ contents: [] }) },
+          mockAccessToken,
+          mockProjectId,
+          undefined,
+          "antigravity"
+        );
+        expect(result.effectiveModel).toBe("claude-sonnet-4-6");
+        expect(result.request).toContain("/v1internal:generateContent");
       });
     });
   });

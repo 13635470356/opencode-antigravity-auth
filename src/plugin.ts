@@ -31,7 +31,12 @@ import {
   prepareAntigravityRequest,
   transformAntigravityResponse,
 } from "./plugin/request";
-import { resolveModelWithTier } from "./plugin/transform/model-resolver";
+import {
+  getPingModel,
+  hasBothQuotaPools,
+  loadModelMapping,
+  resolveMappedModel,
+} from "./plugin/config/model-mapping";
 import {
   isEmptyResponseBody,
   createSyntheticErrorResponse,
@@ -491,10 +496,12 @@ async function verifyAccountAccess(
     headers["x-goog-user-project"] = projectId;
   }
 
+  // 探测模型从映射表数据驱动获取（第一个 antigravity 池的 gemini 条目）
+  const pingModel = getPingModel();
   const requestBody = {
-    model: "gemini-3-flash",
+    model: pingModel,
     request: {
-      model: "gemini-3-flash",
+      model: pingModel,
       contents: [{ role: "user", parts: [{ text: "ping" }] }],
       generationConfig: { maxOutputTokens: 1, temperature: 0 },
     },
@@ -1468,6 +1475,11 @@ export const createAntigravityPlugin = (providerId: string) => async (
           const urlString = toUrlString(input);
           const family = getModelFamilyFromUrl(urlString);
           const model = extractModelFromUrl(urlString);
+
+          // 未映射模型：快速失败，不进入账号循环、不消耗账号尝试（2.0.0 起仅支持映射表中的模型）
+          if (model && !resolveMappedModel(model)) {
+            return createUnsupportedModelResponse(model);
+          }
           const debugLines: string[] = [];
           const pushDebug = (line: string) => {
             if (!isDebugEnabled()) return;
@@ -3411,7 +3423,7 @@ function resolveHeaderRoutingDecision(
     cliFirst,
     preferredHeaderStyle,
     explicitQuota,
-    allowQuotaFallback: family === "gemini",
+    allowQuotaFallback: family === "gemini" && hasBothQuotaPools(),
   };
 }
 
@@ -3431,8 +3443,7 @@ function getHeaderStyleFromUrl(
   if (!modelWithSuffix) {
     return cliFirst ? "gemini-cli" : "antigravity";
   }
-  const { quotaPreference } = resolveModelWithTier(modelWithSuffix, { cli_first: cliFirst });
-  return quotaPreference ?? "antigravity";
+  return resolveMappedModel(modelWithSuffix)?.pool ?? (cliFirst ? "gemini-cli" : "antigravity");
 }
 
 function isExplicitQuotaFromUrl(urlString: string): boolean {
@@ -3440,12 +3451,23 @@ function isExplicitQuotaFromUrl(urlString: string): boolean {
   if (!modelWithSuffix) {
     return false;
   }
-  const { explicitQuota } = resolveModelWithTier(modelWithSuffix);
-  return explicitQuota ?? false;
+  return resolveMappedModel(modelWithSuffix) !== undefined;
+}
+
+/**
+ * 未映射模型的错误响应：列出受支持模型并提示迁移。
+ */
+function createUnsupportedModelResponse(modelName: string): Response {
+  const supported = Object.keys(loadModelMapping()).join(", ");
+  const message =
+    `Unsupported model "${modelName}". Supported models (assets/model-mapping.json): ${supported}. ` +
+    `Re-run "Configure models" or update opencode.json to use a supported model.`;
+  return createSyntheticErrorResponse(message, modelName);
 }
 
 export const __testExports = {
   getHeaderStyleFromUrl,
   resolveHeaderRoutingDecision,
   resolveQuotaFallbackHeaderStyle,
+  createUnsupportedModelResponse,
 };

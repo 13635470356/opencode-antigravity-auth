@@ -24,9 +24,12 @@ type ResolveHeaderRoutingDecision = (
   allowQuotaFallback: boolean;
 };
 
+type CreateUnsupportedModelResponse = (modelName: string) => Response;
+
 let resolveQuotaFallbackHeaderStyle: ResolveQuotaFallbackHeaderStyle | undefined;
 let getHeaderStyleFromUrl: GetHeaderStyleFromUrl | undefined;
 let resolveHeaderRoutingDecision: ResolveHeaderRoutingDecision | undefined;
+let createUnsupportedModelResponse: CreateUnsupportedModelResponse | undefined;
 
 beforeAll(async () => {
   vi.mock("@opencode-ai/plugin", () => ({
@@ -43,6 +46,9 @@ beforeAll(async () => {
   resolveHeaderRoutingDecision = (__testExports as {
     resolveHeaderRoutingDecision?: ResolveHeaderRoutingDecision;
   }).resolveHeaderRoutingDecision;
+  createUnsupportedModelResponse = (__testExports as {
+    createUnsupportedModelResponse?: CreateUnsupportedModelResponse;
+  }).createUnsupportedModelResponse;
 });
 
 describe("quota fallback direction", () => {
@@ -98,9 +104,9 @@ describe("header style resolution", () => {
     expect(headerStyle).toBe("antigravity");
   });
 
-  it("keeps antigravity for explicit antigravity prefix when cli_first is enabled", () => {
+  it("keeps antigravity for mapped antigravity-gemini model even when cli_first is enabled", () => {
     const headerStyle = getHeaderStyleFromUrl?.(
-      "https://generativelanguage.googleapis.com/v1beta/models/antigravity-gemini-3-flash:streamGenerateContent",
+      "https://generativelanguage.googleapis.com/v1beta/models/antigravity-gemini-3.7-flash-high:streamGenerateContent",
       "gemini",
       true,
     );
@@ -110,7 +116,7 @@ describe("header style resolution", () => {
 
   it("keeps antigravity for Claude when cli_first is enabled", () => {
     const headerStyle = getHeaderStyleFromUrl?.(
-      "https://generativelanguage.googleapis.com/v1beta/models/claude-opus-4-6-thinking:streamGenerateContent",
+      "https://generativelanguage.googleapis.com/v1beta/models/antigravity-claude-opus-4-6-thinking:streamGenerateContent",
       "claude",
       true,
     );
@@ -133,7 +139,7 @@ describe("header routing decision", () => {
       cliFirst: false,
       preferredHeaderStyle: "antigravity",
       explicitQuota: false,
-      allowQuotaFallback: true,
+      allowQuotaFallback: false,
     });
   });
 
@@ -150,13 +156,13 @@ describe("header routing decision", () => {
       cliFirst: true,
       preferredHeaderStyle: "gemini-cli",
       explicitQuota: false,
-      allowQuotaFallback: true,
+      allowQuotaFallback: false,
     });
   });
 
-  it("keeps explicit antigravity prefix as primary route while fallback remains available", () => {
+  it("keeps explicit antigravity-gemini as primary route while fallback remains unavailable", () => {
     const decision = resolveHeaderRoutingDecision?.(
-      "https://generativelanguage.googleapis.com/v1beta/models/antigravity-gemini-3-flash:streamGenerateContent",
+      "https://generativelanguage.googleapis.com/v1beta/models/antigravity-gemini-3.7-flash-high:streamGenerateContent",
       "gemini",
       {
         cli_first: true,
@@ -167,7 +173,7 @@ describe("header routing decision", () => {
       cliFirst: true,
       preferredHeaderStyle: "antigravity",
       explicitQuota: true,
-      allowQuotaFallback: true,
+      allowQuotaFallback: false,
     });
   });
 
@@ -185,7 +191,22 @@ describe("header routing decision", () => {
       cliFirst: false,
       preferredHeaderStyle: "antigravity",
       explicitQuota: false,
-      allowQuotaFallback: true,
+      allowQuotaFallback: false,
     });
+  });
+});
+
+describe("unsupported model response", () => {
+  it("returns error response listing supported models", async () => {
+    const response = createUnsupportedModelResponse?.("antigravity-gemini-3.1-pro");
+    expect(response).toBeDefined();
+
+    const text = await response?.text();
+    expect(text).toContain("Unsupported model");
+    expect(text).toContain("antigravity-gemini-3.1-pro");
+    expect(text).toContain("antigravity-gemini-3.7-flash-high");
+    expect(text).toContain("antigravity-gemini-3.6-flash-high");
+    expect(text).toContain("antigravity-claude-opus-4-6-thinking");
+    expect(text).toContain("antigravity-claude-sonnet-4-6");
   });
 });

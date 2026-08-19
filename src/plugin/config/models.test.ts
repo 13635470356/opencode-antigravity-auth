@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { OPENCODE_MODEL_DEFINITIONS } from "./models";
+import { loadModelMapping } from "./model-mapping";
 
 const getModel = (name: string) => {
   const model = OPENCODE_MODEL_DEFINITIONS[name];
@@ -11,53 +12,41 @@ const getModel = (name: string) => {
 };
 
 describe("OPENCODE_MODEL_DEFINITIONS", () => {
-  it("includes the full set of configured models", () => {
-    const modelNames = Object.keys(OPENCODE_MODEL_DEFINITIONS).sort();
-
-    expect(modelNames).toEqual([
-      "antigravity-claude-opus-4-6-thinking",
-      "antigravity-claude-sonnet-4-6-thinking",
-      "antigravity-gemini-3.1-pro",
-      "antigravity-gemini-3.5-flash",
-      "antigravity-gpt-oss-120b-medium",
-      "gemini-2.5-flash",
-      "gemini-2.5-pro",
-      "gemini-3-flash-preview",
-      "gemini-3-pro-preview",
-      "gemini-3.1-pro-preview",
-      "gemini-3.1-pro-preview-customtools",
-    ]);
+  it("keys match mapping file keys", () => {
+    const definitionNames = Object.keys(OPENCODE_MODEL_DEFINITIONS).sort();
+    const mappingNames = Object.keys(loadModelMapping()).sort();
+    expect(definitionNames).toEqual(mappingNames);
   });
 
-  it("defines Gemini 3 variants for Antigravity models", () => {
-    expect(getModel("antigravity-gemini-3.1-pro").variants).toEqual({
-      low: { thinkingLevel: "low" },
-      high: { thinkingLevel: "high" },
-    });
+  it("derives all properties from mapping entries", () => {
+    const mapping = loadModelMapping();
 
-    expect(getModel("antigravity-gemini-3.5-flash").variants).toEqual({
-      low: { thinkingLevel: "low" },
-      medium: { thinkingLevel: "medium" },
-      high: { thinkingLevel: "high" },
-    });
+    for (const [configName, definition] of Object.entries(OPENCODE_MODEL_DEFINITIONS)) {
+      const entry = mapping[configName];
+      if (!entry) {
+        throw new Error(`Missing mapping entry for ${configName}`);
+      }
+
+      // limit 原样来自映射
+      expect(definition.limit).toEqual(entry.limit);
+
+      // modalities 使用默认值（因为映射中未定义）
+      expect(definition.modalities).toEqual({
+        input: ["text", "image", "pdf"],
+        output: ["text"],
+      });
+    }
   });
 
-  it("defines thinking budget variants for Claude thinking models", () => {
-    expect(getModel("antigravity-claude-opus-4-6-thinking").variants).toEqual({
-      low: { thinkingConfig: { thinkingBudget: 8192 } },
-      max: { thinkingConfig: { thinkingBudget: 32768 } },
-    });
-
-    expect(getModel("antigravity-claude-sonnet-4-6-thinking").variants).toEqual({
-      low: { thinkingConfig: { thinkingBudget: 8192 } },
-      max: { thinkingConfig: { thinkingBudget: 32768 } },
-    });
+  it("derives display names correctly", () => {
+    // 抽样检查首字母大写派生
+    expect(getModel("antigravity-gemini-3.7-flash-high").name).toBe("Antigravity Gemini 3.7 Flash High");
+    expect(getModel("antigravity-claude-opus-4-6-thinking").name).toBe("Antigravity Claude Opus 4 6 Thinking");
   });
 
-  it("defines GPT-OSS without variants and default (待核) limits", () => {
-    const gptOss = getModel("antigravity-gpt-oss-120b-medium");
-    expect(gptOss.variants).toBeUndefined();
-    expect(gptOss.limit).toEqual({ context: 131072, output: 32768 });
-    expect(gptOss.name).toBe("GPT-OSS 120B Medium (Antigravity)");
+  it("does not include variants property", () => {
+    for (const definition of Object.values(OPENCODE_MODEL_DEFINITIONS)) {
+      expect(definition).not.toHaveProperty("variants");
+    }
   });
 });

@@ -60,9 +60,7 @@ import {
 import { sanitizeCrossModelPayloadInPlace } from "./transform/cross-model-sanitizer";
 import { isGemini3Model, isImageGenerationModel, buildImageGenerationConfig, applyGeminiTransforms } from "./transform";
 import {
-  resolveModelWithTier,
-  resolveModelWithVariant,
-  resolveModelForHeaderStyle,
+  resolveModel,
   isClaudeModel,
   isClaudeThinkingModel,
   CLAUDE_THINKING_MAX_OUTPUT_TOKENS,
@@ -806,8 +804,17 @@ export function prepareAntigravityRequest(
   const [, rawModel = "", rawAction = ""] = match;
   const requestedModel = rawModel;
 
-  const resolved = resolveModelForHeaderStyle(rawModel, headerStyle);
-  let effectiveModel = resolved.actualModel;
+  const resolved = resolveModel(rawModel);
+  if (!resolved) {
+    // 未映射模型：plugin 层 fetch 入口已快速失败，此处为防御性透传（与无 /models/ 匹配时一致）
+    return {
+      request: input,
+      init: { ...baseInit, headers },
+      streaming: false,
+      headerStyle,
+    };
+  }
+  const effectiveModel = resolved.actualModel;
 
   const streaming = rawAction === STREAM_ACTION;
   const defaultEndpoint = headerStyle === "gemini-cli" ? GEMINI_CLI_ENDPOINT : ANTIGRAVITY_ENDPOINT;

@@ -68,7 +68,9 @@ fetch() intercepted → isGenerativeLanguageRequest() → prepareAntigravityRequ
 
 | Step | What Happens |
 |------|--------------|
-| Model detection | Detect Claude/Gemini from URL |
+| Model resolution | Table lookup from `assets/model-mapping.json` via `model-resolver.ts` |
+| Model rewrite | OpenCode model name → Antigravity API model name |
+| Pool selection | `pool` field determines header style (`antigravity` or `gemini-cli`) |
 | Thinking config | Add `thinkingConfig` for thinking models |
 | Thinking strip | Remove ALL thinking blocks (Claude) |
 | Tool normalization | Convert to `functionDeclarations[]` |
@@ -182,13 +184,57 @@ Claude rejects unsupported JSON Schema features. The plugin uses an **allowlist 
 
 ---
 
+## Model Resolution (v2.0.0)
+
+### Table-Based Lookup
+
+Model resolution is now a pure table lookup via `assets/model-mapping.json`, loaded and validated by `src/plugin/config/model-mapping.ts`.
+
+**Supported models (all use Antigravity quota pool):**
+
+| OpenCode Model Name | Antigravity API Model | Pool |
+|---------------------|----------------------|------|
+| `antigravity-gemini-3.7-flash-high` | `gemini-3.7-flash-high` | `antigravity` |
+| `antigravity-gemini-3.6-flash-high` | `gemini-3.6-flash-high` | `antigravity` |
+| `antigravity-claude-opus-4-6-thinking` | `claude-opus-4-6-thinking` | `antigravity` |
+| `antigravity-claude-sonnet-4-6` | `claude-sonnet-4-6` | `antigravity` |
+
+**Resolution process** (`src/plugin/transform/model-resolver.ts`):
+- `resolveModel(openCodeModelName)` → returns mapping entry or throws
+- `getModelFamily(openCodeModelName)` → returns `"claude"` or `"gemini"`
+- Unmapped models → fast-fail with `createUnsupportedModelResponse()` at fetch entry point
+
+**Removed in v2.0.0:**
+- `MODEL_ALIASES`, `TIER_REGEX`, `THINKING_TIER_BUDGETS` constants
+- `resolveModelWithTier()`, `resolveModelWithVariant()`, `resolveModelForHeaderStyle()` functions
+- Model variant system (`-low`, `-medium`, `-high` suffixes)
+- Per-variant thinking budgets
+- Skip alias handling (`skipAlias` parameter)
+
+### Quota Pool Selection (Data-Driven)
+
+The `pool` field in `model-mapping.json` determines the header style and quota pool:
+
+| Pool Value | Header Style | Quota Source | CLI Fallback |
+|------------|--------------|--------------|--------------|
+| `antigravity` | Electron-style UA + device fingerprint | Antigravity quota | No |
+| `gemini-cli` | `google-api-nodejs-client` UA | Gemini CLI quota | N/A |
+
+**Current state:** All models use `pool: "antigravity"`, so `hasBothQuotaPools()` returns `false` → no CLI fallback behavior.
+
+**Derived behavior:**
+- `getPingModel()` → fetches first entry from mapping
+- OpenCode model definitions → auto-generated from mapping via `src/plugin/config/models.ts`
+
+---
+
 ## Multi-Account Load Balancing
 
 ### How It Works
 
 1. **Sticky selection** - Same account until rate limited (preserves cache)
 2. **Per-model-family** - Claude/Gemini rate limits tracked separately
-3. **Dual quota (Gemini)** - Antigravity + Gemini CLI headers
+3. **Pool-based headers** - Header style from `pool` field (currently all Antigravity)
 4. **Automatic failover** - On 429, switch to next available account
 
 ### Account Storage

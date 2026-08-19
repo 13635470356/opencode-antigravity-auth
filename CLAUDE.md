@@ -58,7 +58,7 @@ CI (`.github/workflows/ci.yml`, Node 20) runs **typecheck → test → build** i
 | File | Responsibility |
 |------|----------------|
 | `request.ts` | `prepareAntigravityRequest()` (build the Antigravity envelope, set headers, strip/inject thinking) and `transformAntigravityResponse()` (SSE streaming, `thought`→`reasoning`, envelope unwrap) |
-| `transform/` | Model resolution (`model-resolver.ts`) + Claude-specific (`claude.ts`) and Gemini-specific (`gemini.ts`) transforms + cross-model sanitization. Barrel at `transform/index.ts` |
+| `transform/` | Claude-specific (`claude.ts`) and Gemini-specific (`gemini.ts`) transforms + cross-model sanitization. Barrel at `transform/index.ts` |
 | `request-helpers.ts` | `cleanJSONSchemaForAntigravity()` (allowlist schema sanitizer), `deepFilterThinkingBlocks()`, empty-response detection |
 | `thinking-recovery.ts` | Turn-boundary detection; closes corrupted turns so Claude can regenerate thinking |
 | `recovery.ts` | Session recovery — injects synthetic `tool_result` blocks when tool execution is interrupted |
@@ -66,7 +66,7 @@ CI (`.github/workflows/ci.yml`, Node 20) runs **typecheck → test → build** i
 | `storage.ts` | Zod schemas + disk persistence for the account pool (versioned) |
 | `rotation.ts` | Health-score and token-bucket trackers for the `hybrid` selection strategy |
 | `quota.ts` | Calls the API usage-stats endpoint to read remaining quota |
-| `config/` | `schema.ts` (Zod config schema) + `loader.ts` (file + env-var merge) |
+| `config/` | `schema.ts` (Zod config schema) + `loader.ts` (file + env-var merge) + `model-mapping.ts` (loads `assets/model-mapping.json`) |
 
 ### Two quota pools, one plugin
 
@@ -75,7 +75,7 @@ The plugin impersonates two different Google clients via header styles (`src/con
 - **`antigravity`** — Electron-style User-Agent + per-account device fingerprint → uses the **Antigravity** quota (Claude models *always* use this).
 - **`gemini-cli`** — `google-api-nodejs-client` UA → uses the **Gemini CLI** quota (production endpoint only).
 
-Gemini models can draw from either pool. Default routing is Antigravity-first with automatic fallback to Gemini CLI when Antigravity is exhausted; `cli_first: true` reverses this. `request.ts` rewrites model names per target API (e.g. `antigravity-gemini-3.1-pro` → `gemini-3.1-pro-preview`).
+Model quota pool assignment is **data-driven** via `assets/model-mapping.json` (`pool` field). Currently all 4 supported models use the `antigravity` pool; `hasBothQuotaPools()` checks the mapping for presence of both pool types. `request.ts` rewrites model names per target API based on the mapping (e.g. `antigravity-gemini-3.7-flash-high` → `gemini-3.7-flash-high`).
 
 ### Endpoint fallback order
 
@@ -98,6 +98,6 @@ All under `~/.config/opencode/` on every platform (Windows included — `~` is t
 
 - `docs/ARCHITECTURE.md` — request/response flow, Claude handling, session recovery, schema cleaning
 - `docs/ANTIGRAVITY_API_SPEC.md` — Antigravity API reference
-- `docs/CONFIGURATION.md`, `docs/MULTI-ACCOUNT.md`, `docs/MODEL-VARIANTS.md`, `docs/TROUBLESHOOTING.md`
+- `docs/CONFIGURATION.md`, `docs/MULTI-ACCOUNT.md`, `docs/MODEL-MAPPING.md`, `docs/TROUBLESHOOTING.md`
 - `README.md` — install/usage and the full copy-paste model config
 - `CHANGELOG.md` — version history

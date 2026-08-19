@@ -63,11 +63,74 @@ Remove-Item "$env:USERPROFILE\.bun\install\cache\opencode-antigravity-auth*" -Re
 opencode auth login
 ```
 
-### "Model not found"
-Add this to your `google` provider config:
-```json
-"npm": "@ai-sdk/google"
+### "Model not found" or "Unsupported model" (v2.0.0)
+
+**Error message:**
 ```
+Unsupported model: <model-name>
+
+Model 'xxx' is not in the mapping table.
+Please either:
+1. Re-run "Configure models" in OpenCode to refresh your model definitions
+2. Update opencode.json to use a supported model name
+```
+
+**Cause (v2.0.0):** The model you're using is not in `assets/model-mapping.json`.
+
+**Solutions:**
+
+1. **Re-configure models in OpenCode:**
+   - Open OpenCode settings
+   - Run "Configure models" for the `google` provider
+   - This will generate model definitions from the current mapping table
+
+2. **Verify opencode.json:**
+   Ensure your model names match the supported list:
+   ```json
+   {
+     "provider": {
+       "google": {
+         "models": {
+           "antigravity-gemini-3.7-flash-high": { ... },
+           "antigravity-gemini-3.6-flash-high": { ... },
+           "antigravity-claude-opus-4-6-thinking": { ... },
+           "antigravity-claude-sonnet-4-6": { ... }
+         }
+       }
+     }
+   }
+   ```
+
+3. **Update plugin:** Ensure you're on the latest version:
+   ```json
+   { "plugin": ["opencode-antigravity-auth@latest"] }
+   ```
+
+**Supported models (v2.0.0):**
+- `antigravity-gemini-3.7-flash-high` → `gemini-3.7-flash-high`
+- `antigravity-gemini-3.6-flash-high` → `gemini-3.6-flash-high`
+- `antigravity-claude-opus-4-6-thinking` → `claude-opus-4-6-thinking`
+- `antigravity-claude-sonnet-4-6` → `claude-sonnet-4-6`
+
+**Removed in v2.0.0:**
+- Model variant system (no more `-low`, `-medium`, `-high` suffixes)
+- Model aliases (no more shorthand names)
+- All tier-based thinking budgets
+- Gemini 3/3.5/3-pro series models
+
+### "Invalid model" (404 from API)
+
+**Error message:**
+```
+Error: Model 'xxx' not found (HTTP 404)
+```
+
+**Cause:** The model name sent to the Antigravity API doesn't exist or has been removed.
+
+**Solutions:**
+1. Check if you're using a deprecated model name (see "Removed in v2.0.0" above)
+2. Verify your plugin is up to date
+3. Re-run "Configure models" in OpenCode
 
 ### Session errors
 Type `continue` to trigger auto-recovery, or use `/undo` to roll back.
@@ -399,31 +462,30 @@ You don't need them. This plugin handles all Google OAuth.
 
 ## Migration Guides
 
-### v1.2.8+ (Variants)
+### v2.0.0 (Model Mapping Table)
 
-v1.2.8+ introduces **model variants** for dynamic thinking configuration.
+**Breaking changes from v1.x:**
 
-**Before (v1.2.7):**
-```json
-{
-  "antigravity-claude-opus-4-6-thinking-low": { ... },
-  "antigravity-claude-opus-4-6-thinking-max": { ... }
-}
-```
+**Removed:**
+- Model variant system (no more `-low`, `-medium`, `-high` suffixes)
+- Model aliases (no more shorthand names)
+- Tier-based thinking budgets
+- Gemini 3/3.5/3-pro series models
 
-**After (v1.2.8+):**
-```json
-{
-  "antigravity-claude-opus-4-6-thinking": {
-    "variants": {
-      "low": { "thinkingConfig": { "thinkingBudget": 8192 } },
-      "max": { "thinkingConfig": { "thinkingBudget": 32768 } }
-    }
-  }
-}
-```
+**Added:**
+- Pure table lookup from `assets/model-mapping.json`
+- Only 4 supported models:
+  - `antigravity-gemini-3.7-flash-high`
+  - `antigravity-gemini-3.6-flash-high`
+  - `antigravity-claude-opus-4-6-thinking`
+  - `antigravity-claude-sonnet-4-6`
 
-Use canonical model names from current docs. Deprecated model names are sent as requested and may fail if the upstream API has removed them.
+**Migration path:**
+
+1. Update your opencode.json to use canonical model names from the list above
+2. Remove any old model names (e.g., `antigravity-gemini-3-pro-low`, `antigravity-gemini-3.5-flash`, etc.)
+3. Re-run "Configure models" in OpenCode to regenerate model definitions
+4. Update plugin: `"plugin": ["opencode-antigravity-auth@latest"]`
 
 ### v1.2.7 (Prefix)
 
@@ -431,10 +493,10 @@ v1.2.7+ uses explicit `antigravity-` prefix:
 
 | Old Name | New Name |
 |----------|----------|
-| `gemini-3-pro-low` | `antigravity-gemini-3-pro` |
+| `gemini-3-pro-low` | `antigravity-gemini-3-pro` (deprecated in v2.0.0) |
 | `claude-sonnet-4-6` | `antigravity-claude-sonnet-4-6` |
 
-Use the `antigravity-` prefixed model names shown above.
+Use the `antigravity-` prefixed model names shown above (see v2.0.0 migration for current supported models).
 
 ---
 

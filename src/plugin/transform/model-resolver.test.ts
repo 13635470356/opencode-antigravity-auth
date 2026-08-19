@@ -1,341 +1,137 @@
-import { describe, it, expect } from "vitest";
-import { resolveModelWithTier, resolveModelWithVariant, resolveModelForHeaderStyle } from "./model-resolver";
+import { describe, it, expect } from "vitest"
+import { resolveModel, getModelFamily } from "./model-resolver"
+import { loadModelMapping } from "../config/model-mapping"
 
-describe("resolveModelWithTier", () => {
-  describe("Gemini 3 flash models (Issue #109)", () => {
-    it("antigravity-gemini-3-flash gets default thinkingLevel 'low'", () => {
-      const result = resolveModelWithTier("antigravity-gemini-3-flash");
-      expect(result.actualModel).toBe("gemini-3-flash");
-      expect(result.thinkingLevel).toBe("low");
-      expect(result.quotaPreference).toBe("antigravity");
-    });
+describe("resolveModel", () => {
+  describe("遍历映射表中的所有模型", () => {
+    it("每个配置名 resolveModel 后 actualModel === 条目 actual", () => {
+      const mapping = loadModelMapping()
 
-    it("gemini-3-flash gets default thinkingLevel 'low'", () => {
-      const result = resolveModelWithTier("gemini-3-flash");
-      expect(result.actualModel).toBe("gemini-3-flash");
-      expect(result.thinkingLevel).toBe("low");
-      expect(result.quotaPreference).toBe("antigravity");
-    });
+      for (const [configName, entry] of Object.entries(mapping)) {
+        const result = resolveModel(configName)
+        expect(result).toBeDefined()
+        expect(result?.actualModel).toBe(entry.actual)
+      }
+    })
+  })
 
-    it("gemini-3-flash-preview gets default thinkingLevel 'low' with antigravity quota", () => {
-      const result = resolveModelWithTier("gemini-3-flash-preview");
-      expect(result.actualModel).toBe("gemini-3-flash-preview");
-      expect(result.thinkingLevel).toBe("low");
-      // All Gemini models now default to antigravity
-      expect(result.quotaPreference).toBe("antigravity");
-    });
-  });
+  describe("未映射名称返回 undefined", () => {
+    it("antigravity-gemini-3.1-pro 未映射", () => {
+      const result = resolveModel("antigravity-gemini-3.1-pro")
+      expect(result).toBeUndefined()
+    })
 
-  describe("Gemini 3 preview models (Issue #115)", () => {
-    it("gemini-3-pro-preview gets default thinkingLevel 'low' with antigravity quota", () => {
-      const result = resolveModelWithTier("gemini-3-pro-preview");
-      expect(result.actualModel).toBe("gemini-3-pro-preview");
-      expect(result.thinkingLevel).toBe("low");
-      // All Gemini models now default to antigravity
-      expect(result.quotaPreference).toBe("antigravity");
-    });
+    it("gemini-3-flash 未映射", () => {
+      const result = resolveModel("gemini-3-flash")
+      expect(result).toBeUndefined()
+    })
 
-    it("gemini-3.1-pro-preview gets default thinkingLevel 'low' with antigravity quota", () => {
-      const result = resolveModelWithTier("gemini-3.1-pro-preview");
-      expect(result.actualModel).toBe("gemini-3.1-pro-preview");
-      expect(result.thinkingLevel).toBe("low");
-      expect(result.quotaPreference).toBe("antigravity");
-    });
-  });
+    it("gpt-oss-120b 未映射", () => {
+      const result = resolveModel("gpt-oss-120b")
+      expect(result).toBeUndefined()
+    })
 
-  describe("All Gemini models default to antigravity quota", () => {
-    it("gemini-2.5-flash defaults to antigravity", () => {
-      const result = resolveModelWithTier("gemini-2.5-flash");
-      expect(result.quotaPreference).toBe("antigravity");
-    });
+    it("claude-opus-4-6-thinking 无前缀未映射", () => {
+      const result = resolveModel("claude-opus-4-6-thinking")
+      expect(result).toBeUndefined()
+    })
 
-    it("gemini-2.5-pro defaults to antigravity", () => {
-      const result = resolveModelWithTier("gemini-2.5-pro");
-      expect(result.quotaPreference).toBe("antigravity");
-    });
+    it("antigravity-gemini-3.5-flash 未映射", () => {
+      const result = resolveModel("antigravity-gemini-3.5-flash")
+      expect(result).toBeUndefined()
+    })
+  })
 
-    it("gemini-2.0-flash defaults to antigravity", () => {
-      const result = resolveModelWithTier("gemini-2.0-flash");
-      expect(result.quotaPreference).toBe("antigravity");
-    });
-  });
+  describe("thinking 配置", () => {
+    it("gemini 条目（含 -high 后缀） → thinkingLevel === 'high'", () => {
+      const mapping = loadModelMapping()
 
-  describe("cli_first quota preference", () => {
-    it("prefers gemini-cli when cli_first is true and no prefix is set", () => {
-      const result = resolveModelWithTier("gemini-3-flash", { cli_first: true });
-      expect(result.quotaPreference).toBe("gemini-cli");
-      expect(result.explicitQuota).toBe(false);
-    });
+      for (const [configName, entry] of Object.entries(mapping)) {
+        if (entry.actual.includes("gemini-3") && entry.actual.endsWith("-high")) {
+          const result = resolveModel(configName)
+          expect(result?.thinkingLevel).toBe("high")
+        }
+      }
+    })
 
-    it("keeps antigravity when antigravity prefix is explicit", () => {
-      const result = resolveModelWithTier("antigravity-gemini-3-flash", { cli_first: true });
-      expect(result.quotaPreference).toBe("antigravity");
-      expect(result.explicitQuota).toBe(true);
-    });
+    it("claude-opus-4-6-thinking → thinkingBudget === 32768", () => {
+      const result = resolveModel("antigravity-claude-opus-4-6-thinking")
+      expect(result?.thinkingBudget).toBe(32768)
+    })
 
-    it("keeps antigravity for Claude models when cli_first is true", () => {
-      const result = resolveModelWithTier("claude-opus-4-6-thinking", { cli_first: true });
-      expect(result.quotaPreference).toBe("antigravity");
-    });
+    it("claude-sonnet-4-6 → thinkingBudget/thinkingLevel 均 undefined", () => {
+      const result = resolveModel("antigravity-claude-sonnet-4-6")
+      expect(result?.thinkingBudget).toBeUndefined()
+      expect(result?.thinkingLevel).toBeUndefined()
+    })
+  })
 
-    it("keeps antigravity for image models when cli_first is true", () => {
-      const result = resolveModelWithTier("gemini-3-pro-image", { cli_first: true });
-      expect(result.quotaPreference).toBe("antigravity");
-      expect(result.explicitQuota).toBe(true);
-    });
+  describe("quota 配置", () => {
+    it("所有映射模型的 quotaPreference === 'antigravity'", () => {
+      const mapping = loadModelMapping()
 
-    it("defaults to antigravity when cli_first is false", () => {
-      const result = resolveModelWithTier("gemini-3-flash", { cli_first: false });
-      expect(result.quotaPreference).toBe("antigravity");
-    });
-  });
+      for (const [configName] of Object.entries(mapping)) {
+        const result = resolveModel(configName)
+        expect(result?.quotaPreference).toBe("antigravity")
+      }
+    })
 
-  describe("Antigravity Gemini 3 with tier suffix", () => {
-    it("antigravity-gemini-3-pro-low gets thinkingLevel from tier", () => {
-      const result = resolveModelWithTier("antigravity-gemini-3-pro-low");
-      expect(result.actualModel).toBe("gemini-3-pro-low");
-      expect(result.thinkingLevel).toBe("low");
-      expect(result.quotaPreference).toBe("antigravity");
-    });
+    it("所有映射模型的 explicitQuota === true", () => {
+      const mapping = loadModelMapping()
 
-    it("antigravity-gemini-3-pro-high gets thinkingLevel from tier", () => {
-      const result = resolveModelWithTier("antigravity-gemini-3-pro-high");
-      expect(result.actualModel).toBe("gemini-3-pro-high");
-      expect(result.thinkingLevel).toBe("high");
-      expect(result.quotaPreference).toBe("antigravity");
-    });
+      for (const [configName] of Object.entries(mapping)) {
+        const result = resolveModel(configName)
+        expect(result?.explicitQuota).toBe(true)
+      }
+    })
+  })
 
-    it("antigravity-gemini-3-flash-medium gets thinkingLevel from tier", () => {
-      const result = resolveModelWithTier("antigravity-gemini-3-flash-medium");
-      expect(result.actualModel).toBe("gemini-3-flash");
-      expect(result.thinkingLevel).toBe("medium");
-    });
+  describe("isThinkingModel 配置", () => {
+    it("claude thinking 模型 isThinkingModel === true", () => {
+      const result = resolveModel("antigravity-claude-opus-4-6-thinking")
+      expect(result?.isThinkingModel).toBe(true)
+    })
 
-    it("antigravity-gemini-3.5-flash gets -low suffix (Antigravity requires suffix)", () => {
-      const result = resolveModelWithTier("antigravity-gemini-3.5-flash");
-      expect(result.actualModel).toBe("gemini-3.5-flash-low");
-      expect(result.thinkingLevel).toBe("low");
-      expect(result.quotaPreference).toBe("antigravity");
-    });
+    it("gemini-3 模型 isThinkingModel === true", () => {
+      const mapping = loadModelMapping()
 
-    it("antigravity-gemini-3.5-flash-high keeps tier suffix", () => {
-      const result = resolveModelWithTier("antigravity-gemini-3.5-flash-high");
-      expect(result.actualModel).toBe("gemini-3.5-flash-high");
-      expect(result.thinkingLevel).toBe("high");
-    });
+      for (const [configName, entry] of Object.entries(mapping)) {
+        if (entry.actual.includes("gemini-3")) {
+          const result = resolveModel(configName)
+          expect(result?.isThinkingModel).toBe(true)
+        }
+      }
+    })
 
-    it("antigravity-gemini-3.1-pro gets default -low model", () => {
-      const result = resolveModelWithTier("antigravity-gemini-3.1-pro");
-      expect(result.actualModel).toBe("gemini-3.1-pro-low");
-      expect(result.thinkingLevel).toBe("low");
-    });
-  });
+    it("非 thinking 模型 isThinkingModel === false", () => {
+      const result = resolveModel("antigravity-claude-sonnet-4-6")
+      expect(result?.isThinkingModel).toBe(false)
+    })
+  })
+})
 
-  describe("Claude thinking models default budget", () => {
-    it("antigravity-claude-opus-4-6-thinking gets default max budget (32768)", () => {
-      const result = resolveModelWithTier("antigravity-claude-opus-4-6-thinking");
-      expect(result.actualModel).toBe("claude-opus-4-6-thinking");
-      expect(result.thinkingBudget).toBe(32768);
-      expect(result.isThinkingModel).toBe(true);
-      expect(result.quotaPreference).toBe("antigravity");
-    });
-  });
+describe("getModelFamily", () => {
+  describe("claude 模型家族", () => {
+    it("claude-*.includes('claude') → 'claude'", () => {
+      expect(getModelFamily("claude-opus-4-6")).toBe("claude")
+      expect(getModelFamily("claude-sonnet-4-6")).toBe("claude")
+      expect(getModelFamily("antigravity-claude-opus-4-6-thinking")).toBe("claude")
+    })
+  })
 
-  describe("Claude Sonnet 4.6 (non-thinking)", () => {
-    it("claude-sonnet-4-6 resolves as non-thinking model", () => {
-      const result = resolveModelWithTier("claude-sonnet-4-6");
-      expect(result.actualModel).toBe("claude-sonnet-4-6");
-      expect(result.isThinkingModel).toBe(false);
-      expect(result.thinkingBudget).toBeUndefined();
-      expect(result.quotaPreference).toBe("antigravity");
-    });
+  describe("gemini-flash 模型家族", () => {
+    it("gemini-*flash* → 'gemini-flash'", () => {
+      expect(getModelFamily("gemini-3.7-flash-high")).toBe("gemini-flash")
+      expect(getModelFamily("gemini-3.6-flash-high")).toBe("gemini-flash")
+      expect(getModelFamily("gemini-2.5-flash")).toBe("gemini-flash")
+    })
+  })
 
-    it("antigravity-claude-sonnet-4-6 resolves as non-thinking model with explicit quota", () => {
-      const result = resolveModelWithTier("antigravity-claude-sonnet-4-6");
-      expect(result.actualModel).toBe("claude-sonnet-4-6");
-      expect(result.isThinkingModel).toBe(false);
-      expect(result.thinkingBudget).toBeUndefined();
-      expect(result.quotaPreference).toBe("antigravity");
-      expect(result.explicitQuota).toBe(true);
-    });
-
-    it("gemini-claude-sonnet-4-6 alias resolves to claude-sonnet-4-6", () => {
-      const result = resolveModelWithTier("gemini-claude-sonnet-4-6");
-      expect(result.actualModel).toBe("claude-sonnet-4-6");
-      expect(result.isThinkingModel).toBe(false);
-      expect(result.quotaPreference).toBe("antigravity");
-    });
-  });
-
-  describe("Image models", () => {
-    it("marks antigravity-gemini-3-pro-image as explicit quota", () => {
-      const result = resolveModelWithTier("antigravity-gemini-3-pro-image");
-      expect(result.actualModel).toBe("gemini-3-pro-image");
-      expect(result.isImageModel).toBe(true);
-      expect(result.explicitQuota).toBe(true);
-      expect(result.quotaPreference).toBe("antigravity");
-    });
-
-    it("marks gemini-3-pro-image as explicit quota", () => {
-      const result = resolveModelWithTier("gemini-3-pro-image");
-      expect(result.actualModel).toBe("gemini-3-pro-image");
-      expect(result.isImageModel).toBe(true);
-      expect(result.explicitQuota).toBe(true);
-      expect(result.quotaPreference).toBe("antigravity");
-    });
-  });
-});
-
-describe("resolveModelWithVariant", () => {
-  describe("without variant config", () => {
-    it("falls back to tier resolution for Claude thinking models", () => {
-      const result = resolveModelWithVariant("claude-opus-4-6-thinking-low");
-      expect(result.actualModel).toBe("claude-opus-4-6-thinking");
-      expect(result.thinkingBudget).toBe(8192);
-      expect(result.configSource).toBeUndefined();
-    });
-
-    it("falls back to tier resolution for Gemini 3 models", () => {
-      const result = resolveModelWithVariant("gemini-3-pro-high");
-      expect(result.actualModel).toBe("gemini-3-pro");
-      expect(result.thinkingLevel).toBe("high");
-      expect(result.configSource).toBeUndefined();
-    });
-  });
-
-  describe("with variant config", () => {
-    it("overrides tier budget for Claude models", () => {
-      const result = resolveModelWithVariant("antigravity-claude-opus-4-6-thinking", {
-        thinkingBudget: 24000,
-      });
-      expect(result.actualModel).toBe("claude-opus-4-6-thinking");
-      expect(result.thinkingBudget).toBe(24000);
-      expect(result.configSource).toBe("variant");
-    });
-
-    it("maps budget to thinkingLevel for Gemini 3 - low", () => {
-      const result = resolveModelWithVariant("antigravity-gemini-3-pro", {
-        thinkingBudget: 8000,
-      });
-      expect(result.actualModel).toBe("gemini-3-pro-low");
-      expect(result.thinkingLevel).toBe("low");
-      expect(result.thinkingBudget).toBeUndefined();
-      expect(result.configSource).toBe("variant");
-    });
-
-    it("maps budget to thinkingLevel for Gemini 3 Flash - medium (no tier suffix)", () => {
-      const result = resolveModelWithVariant("antigravity-gemini-3-flash", {
-        thinkingBudget: 12000,
-      });
-      expect(result.actualModel).toBe("gemini-3-flash");
-      expect(result.thinkingLevel).toBe("medium");
-      expect(result.configSource).toBe("variant");
-    });
-
-    it("maps budget to thinkingLevel for Gemini 3 - high", () => {
-      const result = resolveModelWithVariant("antigravity-gemini-3-pro", {
-        thinkingBudget: 32000,
-      });
-      expect(result.thinkingLevel).toBe("high");
-      expect(result.configSource).toBe("variant");
-    });
-
-    it("uses budget directly for non-Gemini 3 models", () => {
-      const result = resolveModelWithVariant("gemini-2.5-pro", {
-        thinkingBudget: 20000,
-      });
-      expect(result.thinkingBudget).toBe(20000);
-      expect(result.thinkingLevel).toBeUndefined();
-      expect(result.configSource).toBe("variant");
-    });
-  });
-
-  describe("backward compatibility", () => {
-    it("tier-suffixed models work without variant config", () => {
-      const lowResult = resolveModelWithVariant("claude-opus-4-6-thinking-low");
-      expect(lowResult.thinkingBudget).toBe(8192);
-
-      const medResult = resolveModelWithVariant("claude-opus-4-6-thinking-medium");
-      expect(medResult.thinkingBudget).toBe(16384);
-
-      const highResult = resolveModelWithVariant("claude-opus-4-6-thinking-high");
-      expect(highResult.thinkingBudget).toBe(32768);
-    });
-
-    it("variant config overrides tier suffix", () => {
-      const result = resolveModelWithVariant("claude-opus-4-6-thinking-low", {
-        thinkingBudget: 50000,
-      });
-      expect(result.thinkingBudget).toBe(50000);
-      expect(result.configSource).toBe("variant");
-    });
-  });
-});
-
-describe("Issue #103: resolveModelForHeaderStyle", () => {
-  describe("quota fallback from gemini-cli to antigravity", () => {
-    it("transforms gemini-3-flash-preview to gemini-3-flash for antigravity", () => {
-      const result = resolveModelForHeaderStyle("gemini-3-flash-preview", "antigravity");
-      expect(result.actualModel).toBe("gemini-3-flash");
-      expect(result.quotaPreference).toBe("antigravity");
-    });
-
-    it("transforms gemini-3-pro-preview to gemini-3-pro-low for antigravity", () => {
-      const result = resolveModelForHeaderStyle("gemini-3-pro-preview", "antigravity");
-      expect(result.actualModel).toBe("gemini-3-pro-low");
-      expect(result.quotaPreference).toBe("antigravity");
-    });
-
-    it("transforms gemini-3.1-pro-preview to gemini-3.1-pro-low for antigravity", () => {
-      const result = resolveModelForHeaderStyle("gemini-3.1-pro-preview", "antigravity");
-      expect(result.actualModel).toBe("gemini-3.1-pro-low");
-      expect(result.quotaPreference).toBe("antigravity");
-    });
-
-    it("transforms gemini-3.1-pro-preview-customtools to gemini-3.1-pro-low for antigravity", () => {
-      const result = resolveModelForHeaderStyle("gemini-3.1-pro-preview-customtools", "antigravity");
-      expect(result.actualModel).toBe("gemini-3.1-pro-low");
-      expect(result.quotaPreference).toBe("antigravity");
-    });
-  });
-
-  describe("quota fallback from antigravity to gemini-cli", () => {
-    it("transforms gemini-3-flash to gemini-3-flash-preview for gemini-cli", () => {
-      const result = resolveModelForHeaderStyle("gemini-3-flash", "gemini-cli");
-      expect(result.actualModel).toBe("gemini-3-flash-preview");
-      expect(result.quotaPreference).toBe("gemini-cli");
-    });
-
-    it("transforms gemini-3-pro-low to gemini-3-pro-preview for gemini-cli", () => {
-      const result = resolveModelForHeaderStyle("gemini-3-pro-low", "gemini-cli");
-      expect(result.actualModel).toBe("gemini-3-pro-preview");
-      expect(result.quotaPreference).toBe("gemini-cli");
-    });
-
-    it("transforms gemini-3.1-pro-low to gemini-3.1-pro-preview for gemini-cli", () => {
-      const result = resolveModelForHeaderStyle("gemini-3.1-pro-low", "gemini-cli");
-      expect(result.actualModel).toBe("gemini-3.1-pro-preview");
-      expect(result.quotaPreference).toBe("gemini-cli");
-    });
-
-    it("keeps gemini-3.1-pro-preview-customtools unchanged for gemini-cli", () => {
-      const result = resolveModelForHeaderStyle("gemini-3.1-pro-preview-customtools", "gemini-cli");
-      expect(result.actualModel).toBe("gemini-3.1-pro-preview-customtools");
-      expect(result.quotaPreference).toBe("gemini-cli");
-    });
-  });
-
-  describe("no transformation needed", () => {
-    it("keeps gemini-2.5-flash unchanged for both header styles", () => {
-      const antigravity = resolveModelForHeaderStyle("gemini-2.5-flash", "antigravity");
-      const cli = resolveModelForHeaderStyle("gemini-2.5-flash", "gemini-cli");
-      expect(antigravity.actualModel).toBe("gemini-2.5-flash");
-      expect(cli.actualModel).toBe("gemini-2.5-flash");
-    });
-
-    it("keeps claude models unchanged (antigravity only)", () => {
-      const result = resolveModelForHeaderStyle("claude-opus-4-6-thinking", "antigravity");
-      expect(result.actualModel).toBe("claude-opus-4-6-thinking");
-    });
-  });
-});
+  describe("gemini-pro 模型家族", () => {
+    it("其他 gemini 模型 → 'gemini-pro'", () => {
+      expect(getModelFamily("gemini-3.1-pro")).toBe("gemini-pro")
+      expect(getModelFamily("gemini-3-pro")).toBe("gemini-pro")
+      expect(getModelFamily("gemini-2.5-pro")).toBe("gemini-pro")
+    })
+  })
+})

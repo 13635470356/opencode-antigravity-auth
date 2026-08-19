@@ -1,5 +1,24 @@
 # Changelog
 
+## [2.0.0] - 2026-08-17
+
+### Breaking
+
+- **All legacy models removed** - Old model configurations have been removed. Only 4 models are now supported: `antigravity-gemini-3.7-flash-high`, `antigravity-gemini-3.6-flash-high`, `antigravity-claude-opus-4-6-thinking`, `antigravity-claude-sonnet-4-6`. All other model names will fail with an "Unsupported model" error.
+- **Variant/tier system removed** - Removed all `-low`/`-medium`/`-high`/`-max` variants, `THINKING_TIER_BUDGETS`, `MODEL_ALIASES`, and `resolveModelWithTier`/`WithVariant`/`ForHeaderStyle` functions. Model resolution is now a pure lookup via `assets/model-mapping.json`.
+- **MODEL-VARIANTS.md deleted** - Documentation file removed as variant system no longer exists.
+
+### Added
+
+- **Model mapping as single source of truth** - All model configurations now live in `assets/model-mapping.json` (keys = OpenCode config names, values = `{actual, pool, limit}`). Loaded via `src/plugin/config/model-mapping.ts` with Zod validation. Changing models no longer requires code changes—edit the JSON and restart.
+- **Migration guidance** - Users need to re-run "Configure models" after upgrading. Any unmapped model in `opencode.json` will trigger an "Unsupported model" error with instructions to re-run configuration.
+
+### Changed
+
+- **Quota pools now data-driven** - Dual-pool support (Antigravity + Gemini CLI) preserved but now driven by the `pool` field in model-mapping.json. Currently all 4 models use `antigravity` pool; `hasBothQuotaPools()` checks the mapping for presence of both pool types.
+- **Ping model now data-driven** - The search/ping model is derived from model-mapping.json instead of hardcoded.
+- **Tests derived from JSON** - Test fixtures and model routing tests now derive their expectations from `model-mapping.json`, reducing sync drift.
+
 ## [1.6.2] - 2026-06-23
 
 ### Fixed
